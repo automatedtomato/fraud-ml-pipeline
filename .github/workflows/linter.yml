@@ -1,0 +1,33 @@
+name: Python Linter
+
+on:
+  push:
+    branches: ["*"]
+
+jobs:
+  format:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x' # 使用するPythonのバージョン
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install isort black
+
+      - name: Run isort and black
+        run: |
+          isort .
+          black .
+
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "ci/cd: auto format code by isort and black" # コミットメッセージの設定
+          branch: ${{ github.ref }}
