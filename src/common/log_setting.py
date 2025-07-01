@@ -1,7 +1,6 @@
 import logging
-from logging import StreamHandler, Formatter, handlers
+from logging import Formatter, StreamHandler, handlers
 from pathlib import Path
-
 
 # ========== Constants ==========
 
