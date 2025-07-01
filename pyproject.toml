@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "MLOps pipeline for credit card fraud detection"
 authors = ["Hikaru Tomizawa <tomizawa.licht@gmail.com>"]
 readme = "README.md"
+packages = [{ include = "fraud_detection", from = "src" }]
 
 [tool.poetry.dependencies]
 python = "^3.11"
@@ -27,6 +28,9 @@ mlflow = "^2.13.2"
 python-dotenv = "^1.0.1"
 loguru = "^0.7.2"
 pydantic = "^2.7.1"
+pydantic-settings = "^2.10.0"
+requests = "^2.32.3"
+faker = "^37.4.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.2.2"
