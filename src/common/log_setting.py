@@ -1,5 +1,6 @@
 import logging
 from logging import StreamHandler, Formatter, handlers
+from pathlib import Path
 
 
 
@@ -27,7 +28,7 @@ def setup_logger(logger: logging.Logger, *, level: str | None = "DEBUG") -> logg
 
     st_handler = StreamHandler()
     fl_handler = handlers.RotatingFileHandler(
-        filename="./logs/app.log",
+        filename=Path(__file__).parents[2] / "./logs/app.log",
         maxBytes=10 * 1024 * 1024,
         backupCount=5,
         encoding="utf-8"
