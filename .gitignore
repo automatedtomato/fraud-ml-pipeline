@@ -116,6 +116,8 @@ $RECYCLE.BIN/
 data/raw/*.csv
 data/raw/*.json
 data/raw/*.parquet
+data/raw/generated/*.csv
+data/raw/generated/*.json
 data/processed/*.csv
 data/processed/*.json
 data/processed/*.parquet

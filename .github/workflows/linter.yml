@@ -4,12 +4,19 @@ on:
   push:
     branches: ["*"]
 
+permissions:
+  contents: write
+  pull-requests: write
+
 jobs:
   format:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -30,4 +37,4 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "ci/cd: auto format code by isort and black" # コミットメッセージの設定
-          branch: ${{ github.ref }}
+          branch: ${{ github.head_ref || github.ref_name }}
