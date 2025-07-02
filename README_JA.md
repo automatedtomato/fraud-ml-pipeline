@@ -2,7 +2,7 @@
 
 クレジットカード不正利用検知に特化した、機械学習パイプラインの実装プロジェクトです。PostgreSQL + MLflow + FastAPI を用いたMLOpsワークフローの実践的な学習を目的としています。
 
-## 🎯 プロジェクト概要
+## プロジェクト概要
 
 "Sparkov"エンジンによって生成される擬似クレジットカード取引データを用いて、実践的な不正利用検知システムを構築します。
 
@@ -13,7 +13,7 @@
 - **API**: FastAPIベースの不正スコアリングサービス
 - **MLOps**: MLflowによる実験管理とモデルのバージョニング
 
-## 🛠️ 技術スタック
+## 技術スタック
 
 - **バックエンド**: Python, FastAPI, SQLAlchemy, psycopg2
 - **データベース**: PostgreSQL
@@ -21,7 +21,7 @@
 - **MLOps**: MLflow, Docker, Docker Compose
 - **開発・テスト**: Poetry, Jupyter, pytest
 
-## 🚀 セットアップと使い方
+## セットアップと使い方
 
 ### 1. 前提条件
 - Docker および Docker Compose
@@ -48,32 +48,38 @@
 **VSCode Dev Containers**拡張機能の使用を強く推奨します。
 1.  プロジェクトフォルダをVSCodeで開きます。
 2.  プロンプトが表示されたら、「Reopen in Container」をクリックします。
-3.  これにより、`dev`コンテナ内の開発環境に直接接続されます。
 
-### 4. データ生成
-初期データセットを生成し、データベースに格納するには、ホストマシンのターミナルから以下のコマンドを実行します。
+### 4. 特徴量生成
+生データを生成し、モデル学習用の特徴量テーブルを作成するには、ホストマシンのターミナルから以下のコマンドを実行します。
 ```bash
-docker-compose exec dev poetry run python src/scripts/generate_and_load.py
-````
+docker-compose exec dev poetry run python src/scripts/create_features.py
+```
 
-このコマンドは、擬似取引データを生成し、PostgreSQLの`transactions`テーブルに格納します。
+このコマンドは、特徴量エンジニアリングのパイプライン全体を実行します。生データを読み込み、全ての派生特徴量（Recency, Frequency, Monetaryなど）を計算し、最終的な`feature_transactions`テーブルを作成します。
 
-## 📊 開発の進捗
+### 5. データ確認
+
+特徴量テーブルが作成されたことを確認するには、以下のコマンドを実行します。
+
+```bash
+docker-compose exec db psql -U user -d fraud_detection -c "SELECT COUNT(*) FROM feature_transactions;"
+```
+
+## 開発の進捗
 
   - ✅ **Sprint 1: インフラ基盤構築とEDA - 完了**
-  - Sprint 2: 特徴量エンジニアリング
+  - ✅ **Sprint 2: 特徴量エンジニアリングとパイプライン - 完了**
   - Sprint 3: 機械学習モデルの比較
   - Sprint 4: API開発と統合
 
-## 📝 ライセンス
+## ライセンス
 
 MIT License - 詳細はLICENSEファイルを参照してください。
 
-## 👤 作成者
+## 作成者
 
 Hikaru Tomizawa (富澤晃)
 
 -----
 
 *このプロジェクトは学習およびポートフォリオ目的で開発されています。*
-
