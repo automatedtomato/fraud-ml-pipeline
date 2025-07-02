@@ -1,0 +1,54 @@
+# Features
+common_features: &common_features
+  - amt
+  - lat
+  - long
+  - city_pop
+  - age_at_tx
+  - hour_of_day
+  - day_of_week
+  - distance_from_home_km
+  - time_since_last_tx_sec
+  - tx_in_last_24h
+  - tx_in_last_7d
+  - avg_amt_in_last_24h
+  - avg_amt_in_last_7d
+  - ratio_to_avg_amt_in_last_7d
+  - ratio_to_avg_amt_in_last_24h
+  - avg_amt_historical
+  - amt_ratio_to_avg
+  - category_tx_count
+  - tx_with_same_merch_in_last_1h
+target_column: &target_column "is_fraud"
+
+# Model config
+xgboost_v1:
+  run: true # Run this model?
+  class_path: "fraud_detection.models.xgboost_model.XGBoostModel"
+
+  model_params:
+    objective: 'binary:logistic'
+    eval_metric: 'aucpr' # AUC-PR for inbalance dataset
+    n_estimators: 10000
+    learning_rate: 0.01
+    max_depth: 7
+    subsample: 0.8
+    colsample_bytree: 0.8
+    use_label_encoder: false
+    random_state: 87
+
+  features: *common_features
+  target: *target_column
+
+h20_automl_v1:
+  run: false
+  class_path: "fraud_detection.models.h2o_model.H2OAutoMLModel"
+
+  model_params:
+    max_runtime_secs: 1800 # 30 minutes
+    nfolds: 5
+    sort_metrics: 'AUC'
+    seed: 87
+
+  features: *common_features
+  target: *target_column

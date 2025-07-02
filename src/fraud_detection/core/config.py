@@ -5,6 +5,8 @@ check types of variables with pydantic
 
 import os
 from logging import getLogger
+import yaml
+from pathlib import Path
 
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
@@ -19,7 +21,7 @@ logger = getLogger(__name__)
 logger = setup_logger(logger, level="DEBUG")
 
 
-# ========== Settings ==========
+# ========== DB Settings ==========
 class Settings(BaseSettings):
     """
     Load env file and check types.
@@ -41,6 +43,20 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def load_model_config(config_path: Path = None) -> dict:
+    if config_path is None:
+        config_path = Path(__file__).resolve().parents[2] / "config/model_config.yaml"
+    
+    try:
+        with open(config_path, 'r') as f:
+            config = yaml.safe_load(f)
+        logger.info(f"Model config loaded from {config_path}")
+        return config
+    except FileNotFoundError as e:
+        logger.error(f"Model config file not found: {config_path}")
+        raise
 
 if __name__ == "__main__":
     logger.debug("----- Setting Test -----")
