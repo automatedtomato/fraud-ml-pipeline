@@ -101,7 +101,6 @@ def train(split_ratio: float = 0.8):
         
     total_rows = pd.read_sql(f"SELECT COUNT(*) FROM {table_name}", engine).iloc[0, 0]
     train_rows = int(total_rows * split_ratio)
-    val_rows = total_rows - train_rows
     
     total_chunks = math.ceil(total_rows / CHUNK_SIZE)
     train_chunks = math.ceil(train_rows / CHUNK_SIZE)
@@ -123,7 +122,7 @@ def train(split_ratio: float = 0.8):
     
     logger.info(f"Loading validation sample ({val_sample_size} rows) for early stopping...")
     
-    val_sample_df = pd.read_sql(val_sample_query, engine, chunksize = CHUNK_SIZE, parse_dates=["trans_ts"])
+    val_sample_df = pd.read_sql(val_sample_query, engine, parse_dates=["trans_ts"])
     val_sample_df = _optimize_dtype(val_sample_df)
     
     # The rest of the val data will be loaded via iterator for final evaluation
