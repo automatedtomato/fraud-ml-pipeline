@@ -11,22 +11,29 @@ logger = getLogger(__name__)
 logger = setup_logger(logger, level="DEBUG")
 
 
-class XGBoost(BaseModel):
+class XGBoostModel(BaseModel):
     """
     XGBoost classifier class.
-    Runs based on YAML configuration
+    Runs based on YAML configuration.
+    Capsule incremental training logic.
     """
     
     def __init__(self, model_params: dict):
         super().__init__(model_params)
         self.model = XGBClassifier(**self.model_params)
+        self._is_trained = False # Flag to manage incremental training
         
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs):
+    def fit(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs):
         logger.info("Training XGBoost model...")
         
-        # TODO: implement training logic
+        fit_params = kwargs
+        if self._is_trained:
+            fit_params['xgb_model'] = self.model
+            
+        self.model.fit(X_train, y_train, **fit_params)
+        self._is_trained = True
         
-        logger.info("Training completed.")
+        logger.info("Training step completed.")
         
         pass
     
