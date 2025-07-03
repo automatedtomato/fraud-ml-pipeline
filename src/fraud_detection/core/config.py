@@ -5,9 +5,9 @@ check types of variables with pydantic
 
 import os
 from logging import getLogger
-import yaml
 from pathlib import Path
 
+import yaml
 from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
@@ -48,21 +48,20 @@ settings = Settings()
 def load_config(config_path: Path = None, root: str | None = None) -> dict:
     if config_path is None:
         config_path = Path(__file__).resolve().parents[3] / "config/config.yaml"
-    
+
     try:
-        with open(config_path, 'r') as f:
+        with open(config_path, "r") as f:
             config = yaml.safe_load(f)
         logger.info(f"Config loaded from {config_path}")
     except FileNotFoundError as e:
         logger.error(f"Config file not found: {config_path}")
         raise
-        
+
     if root is not None:
         config = config.get(root, {})
         logger.info(f"Config root: {root}")
-    
+
     return config
-    
 
 
 if __name__ == "__main__":
