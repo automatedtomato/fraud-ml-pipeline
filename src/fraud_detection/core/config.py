@@ -58,6 +58,7 @@ def load_model_config(config_path: Path = None) -> dict:
         logger.error(f"Model config file not found: {config_path}")
         raise
 
+
 if __name__ == "__main__":
     logger.debug("----- Setting Test -----")
     logger.debug(f"PostgreSQL User: {settings.POSTGRES_USER}")
