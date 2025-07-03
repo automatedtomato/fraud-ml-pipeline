@@ -39,6 +39,10 @@ models:
       use_label_encoder: false
       random_state: 87
 
+    fit_params:
+      early_stopping_rounds: 50
+      verbose: 0
+
     features: *common_features
     target: *target_column
 
