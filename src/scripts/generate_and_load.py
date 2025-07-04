@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import text
 
 from common.log_setting import setup_logger
-from fraud_detection.core.config import settings
+from fraud_detection.core.config import load_config, settings
 from fraud_detection.data.database import get_db_engine
 from fraud_detection.data.loader import load_data_to_postgres
 
@@ -23,10 +23,6 @@ GENERATOR_SCRIPT = (
 )
 OUTPUT = PROJECT_ROOT / "data" / "raw" / "generated"
 TABLE_NAME = "transactions"
-
-NUM_CUSTOMERS = 5000
-START_DATE = "2024-01-01"
-END_DATE = "2024-12-31"
 
 
 def find_transaction_files() -> List[Path]:
@@ -100,7 +96,13 @@ def main():
     Main function to generate and load data
     """
 
-    run_datagen(NUM_CUSTOMERS, START_DATE, END_DATE)
+    generator_config = load_config(root="generator")
+
+    n_customers = generator_config.get("num_customers", 1000)
+    start_date = generator_config.get("start_date", "2020-01-01")
+    end_date = generator_config.get("end_date", "2020-12-31")
+
+    run_datagen(n_customers, start_date, end_date)
 
     transaction_files = find_transaction_files()
 
@@ -124,7 +126,7 @@ def main():
 
     engine = get_db_engine()
     with engine.connect() as conn:
-        total_rows = conn.execute(text("SELECT COUNT(*) FROM {TABLE_NAME}")).scalar()
+        total_rows = conn.execute(text(f"SELECT COUNT(*) FROM {TABLE_NAME}")).scalar()
     logger.info(f"Total rows in {TABLE_NAME}: {total_rows}")
 
 

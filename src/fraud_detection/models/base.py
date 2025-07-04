@@ -23,7 +23,7 @@ class BaseModel(ABC):
         self.model_params = model_params
 
     @abstractmethod
-    def train(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs):
+    def fit(self, X_train: pd.DataFrame, y_train: pd.Series, **kwargs):
         pass
 
     @abstractmethod
