@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import text
 
 from common.log_setting import setup_logger
-from fraud_detection.core.config import settings, load_config
+from fraud_detection.core.config import load_config, settings
 from fraud_detection.data.database import get_db_engine
 from fraud_detection.data.loader import load_data_to_postgres
 
@@ -95,12 +95,12 @@ def main():
     """
     Main function to generate and load data
     """
-    
-    generator_config = load_config(root='generator')
-    
-    n_customers = generator_config.get('num_customers', 1000)
-    start_date = generator_config.get('start_date', "2020-01-01")
-    end_date = generator_config.get('end_date', "2020-12-31")
+
+    generator_config = load_config(root="generator")
+
+    n_customers = generator_config.get("num_customers", 1000)
+    start_date = generator_config.get("start_date", "2020-01-01")
+    end_date = generator_config.get("end_date", "2020-12-31")
 
     run_datagen(n_customers, start_date, end_date)
 
