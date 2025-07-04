@@ -14,7 +14,7 @@ from pydantic_settings import BaseSettings
 load_dotenv()
 
 
-from common.log_setting import setup_logger
+from src.common.log_setting import setup_logger
 
 # ========== Setup logger ==========
 logger = getLogger(__name__)
@@ -53,7 +53,7 @@ def load_config(config_path: Path = None, root: str | None = None) -> dict:
         with open(config_path, "r") as f:
             config = yaml.safe_load(f)
         logger.info(f"Config loaded from {config_path}")
-    except FileNotFoundError as e:
+    except FileNotFoundError:
         logger.error(f"Config file not found: {config_path}")
         raise
 
