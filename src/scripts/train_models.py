@@ -96,18 +96,21 @@ def _calc_scale_pos_weight(
 
 def train(split_ratio: float = 0.8):
     """
-    Load model config YAML and perform training
+    Load model config YAML and perform training.
+    Can handle both incremental and batch training strategy.
     """
 
     models_config = load_config(root="models")
     data_config = load_config(root="data")
     engine = get_db_engine()
     table_name = "feature_transactions"
+    
     target = data_config["target_column"]
     features = data_config["common_features"]
 
     total_rows = pd.read_sql(f"SELECT COUNT(*) FROM {table_name}", engine).iloc[0, 0]
     train_rows = int(total_rows * split_ratio)
+    train_query = f"SELECT * FROM {table_name} ORDER BY trans_ts LIMIT {train_rows}"
 
     total_chunks = math.ceil(total_rows / CHUNK_SIZE)
     train_chunks = math.ceil(train_rows / CHUNK_SIZE)
@@ -119,10 +122,6 @@ def train(split_ratio: float = 0.8):
         f"Total rows: {total_rows}, Train rows: {train_rows}, Validation rows: {total_rows - train_rows}"
     )
 
-    train_query = f"SELECT * FROM {table_name} ORDER BY trans_ts LIMIT {train_rows}"
-    train_iterator = pd.read_sql_query(
-        train_query, engine, chunksize=CHUNK_SIZE, parse_dates=["trans_ts"]
-    )
 
     # Step 1: Train-val split and calc scale_pos_weight
     logger.info("--- Preparing Data ---")
@@ -137,13 +136,7 @@ def train(split_ratio: float = 0.8):
 
     val_sample_df = pd.read_sql(val_sample_query, engine, parse_dates=["trans_ts"])
     val_sample_df = _optimize_dtype(val_sample_df)
-
-    # The rest of the val data will be loaded via iterator for final evaluation
-    val_query = f"SELECT * FROM {table_name} ORDER BY trans_ts OFFSET {train_rows}"
-    val_iterator = pd.read_sql(
-        val_query, engine, chunksize=CHUNK_SIZE, parse_dates=["trans_ts"]
-    )
-
+    
     # Step 2: Instantiate learning model
     scale_pos_weight = _calc_scale_pos_weight(table_name, train_rows, target, engine)
 
@@ -169,51 +162,48 @@ def train(split_ratio: float = 0.8):
         return
 
     # Step 3: Train phase
-    logger.info("--- Starting Training Phase ---")
-
-    counter = 0
-    X_val_sample = val_sample_df[features].copy()
-    y_val_sample = val_sample_df[target].copy()
-
-    for i, chunk_df in enumerate(train_iterator):
-
-        # 3.1. Optimize data types
-        chunk_df = _optimize_dtype(chunk_df)
-
-        # 3.2. Train models
-        for model_name, model in models_to_train.items():
-            model_config = models_config[model_name]
-
-            if not model_config.get("run", False):
-                continue
-
-            # features = model_config["features"]
-            # X_val_sample = val_sample_df[features].copy()
-            # y_val_sample = val_sample_df[target].copy()
-
+    for model_name, model in models_to_train.items():
+        model_config = models_config[model_name]
+        strategy = model_config.get("train_strategy", "incremental")
+        logger.info(f"--- Starting Training Phase | Model: '{model_name}' (strategy: '{strategy}') ---")
+        
+        if strategy == "incremental":
+            train_iterator = pd.read_sql_query(
+                train_query, engine, chunksize=CHUNK_SIZE, parse_dates=["trans_ts"]
+            )
+            
+            counter = 0
+            X_val_sample = val_sample_df[features].copy()
+            y_val_sample = val_sample_df[target].copy()
             fit_params = model_config.get("fit_params", {})
-
-            # Set evaluation dataset
             fit_params["eval_set"] = [(X_val_sample, y_val_sample)]
 
-            # Set train dataset
-            X_chunk = chunk_df[features].copy()
-            y_chunk = chunk_df[target].copy()
+            logger.info(f"Starting incremental training for '{model_name}...")
+            for i, chunk_df in enumerate(train_iterator):
+                chunk_df = _optimize_dtype(chunk_df)
+                X_chunk = chunk_df[features].copy()
+                y_chunk = chunk_df[target].copy()
+                model.fit(X_chunk, y_chunk, **fit_params)
+                counter += 1
+                if counter >= 50:
+                    logger.info(f"Training on chunk {i+1}/{train_chunks} completed")
+                    counter = 0
+                del chunk_df, X_chunk, y_chunk
+                gc.collect()  # explicit garbage collection
 
-            model.fit(X_chunk, y_chunk, **fit_params)
-
-            counter += 1
-            if counter >= 50:
-                logger.info(f"Training on chunk {i+1}/{train_chunks} completed")
-                counter = 0
-
-        del chunk_df, X_chunk, y_chunk
-        gc.collect()  # explicit garbage collection
+        elif strategy == "batch":
+            raise NotImplementedError(
+                "Batch training strategy is not implemented yet"
+            )
 
     logger.info("--- Training Phase Completed ---")
 
     # Step 4: Validateion phase
     logger.info("--- Starting Validation Phase ---")
+    val_query = f"SELECT * FROM {table_name} ORDER BY trans_ts OFFSET {train_rows}"
+    val_iterator = pd.read_sql(
+        val_query, engine, chunksize=CHUNK_SIZE, parse_dates=["trans_ts"]
+    )
     all_preds = {model_name: [] for model_name in models_to_train.keys()}
     all_trues = []
     counter = 0
@@ -222,13 +212,13 @@ def train(split_ratio: float = 0.8):
 
         chunk_df = _optimize_dtype(chunk_df)
         y_val_chunk = chunk_df[target].copy()
+        all_trues.extend(y_val_chunk)
 
         for model_name, model in models_to_train.items():
 
             X_val_chunk = chunk_df[features].copy()
             preds = model.predict_proba(X_val_chunk)
             all_preds[model_name].extend(preds)
-            all_trues.extend(y_val_chunk)
 
             counter += 1
             if counter >= 10:
