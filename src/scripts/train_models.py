@@ -104,7 +104,7 @@ def train(split_ratio: float = 0.8):
     data_config = load_config(root="data")
     engine = get_db_engine()
     table_name = "feature_transactions"
-    
+
     target = data_config["target_column"]
     features = data_config["common_features"]
 
@@ -122,7 +122,6 @@ def train(split_ratio: float = 0.8):
         f"Total rows: {total_rows}, Train rows: {train_rows}, Validation rows: {total_rows - train_rows}"
     )
 
-
     # Step 1: Train-val split and calc scale_pos_weight
     logger.info("--- Preparing Data ---")
     val_sample_size = 10000
@@ -136,7 +135,7 @@ def train(split_ratio: float = 0.8):
 
     val_sample_df = pd.read_sql(val_sample_query, engine, parse_dates=["trans_ts"])
     val_sample_df = _optimize_dtype(val_sample_df)
-    
+
     # Step 2: Instantiate learning model
     scale_pos_weight = _calc_scale_pos_weight(table_name, train_rows, target, engine)
 
@@ -165,13 +164,15 @@ def train(split_ratio: float = 0.8):
     for model_name, model in models_to_train.items():
         model_config = models_config[model_name]
         strategy = model_config.get("train_strategy", "incremental")
-        logger.info(f"--- Starting Training Phase | Model: '{model_name}' (strategy: '{strategy}') ---")
-        
+        logger.info(
+            f"--- Starting Training Phase | Model: '{model_name}' (strategy: '{strategy}') ---"
+        )
+
         if strategy == "incremental":
             train_iterator = pd.read_sql_query(
                 train_query, engine, chunksize=CHUNK_SIZE, parse_dates=["trans_ts"]
             )
-            
+
             counter = 0
             X_val_sample = val_sample_df[features].copy()
             y_val_sample = val_sample_df[target].copy()
@@ -192,9 +193,7 @@ def train(split_ratio: float = 0.8):
                 gc.collect()  # explicit garbage collection
 
         elif strategy == "batch":
-            raise NotImplementedError(
-                "Batch training strategy is not implemented yet"
-            )
+            raise NotImplementedError("Batch training strategy is not implemented yet")
 
     logger.info("--- Training Phase Completed ---")
 

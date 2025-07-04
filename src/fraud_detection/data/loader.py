@@ -2,7 +2,6 @@ import io
 from logging import getLogger
 
 import pandas as pd
-from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 
 from common.log_setting import setup_logger

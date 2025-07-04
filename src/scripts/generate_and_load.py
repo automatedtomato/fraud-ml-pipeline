@@ -7,7 +7,7 @@ import pandas as pd
 from sqlalchemy import text
 
 from common.log_setting import setup_logger
-from fraud_detection.core.config import load_config, settings
+from fraud_detection.core.config import load_config
 from fraud_detection.data.database import get_db_engine
 from fraud_detection.data.loader import load_data_to_postgres
 
