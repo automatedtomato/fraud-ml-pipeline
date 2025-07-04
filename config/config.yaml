@@ -1,3 +1,9 @@
+generator:
+  # Simulation Data Generator config
+  n_customers: 1000
+  start_date: "2022-01-01"
+  end_date: "2024-01-01"
+
 data:
   # Features
   common_features: &common_features
@@ -36,11 +42,11 @@ models:
       max_depth: 7
       subsample: 0.8
       colsample_bytree: 0.8
-      use_label_encoder: false
+      # use_label_encoder: false
+      early_stopping_rounds: 50
       random_state: 87
 
     fit_params:
-      early_stopping_rounds: 50
       verbose: 0
 
     features: *common_features
