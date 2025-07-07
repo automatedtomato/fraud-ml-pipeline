@@ -3,7 +3,6 @@ from pytorch_tabnet.metrics import Metric
 from sklearn.metrics import average_precision_score
 
 
-
 def precision_at_k(y_true: np.ndarray, y_scores: np.ndarray, k: float) -> float:
     """
     Calculate precision @ top k percent of predicted scores.
