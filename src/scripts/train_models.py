@@ -10,6 +10,7 @@ from sklearn.metrics import auc, precision_recall_curve
 from common.log_setting import setup_logger
 from fraud_detection.core.config import load_config
 from fraud_detection.data.database import get_db_engine
+from fraud_detection.evaluation.metrics import pr_auc_score, precision_at_k
 
 # ========== Log Setting ==========
 logger = getLogger(__name__)
@@ -253,14 +254,16 @@ def train(split_ratio: float = 0.8):
     for model_name, y_pred_proba in all_preds.items():
         y_pred_proba = np.array(y_pred_proba)
 
-        precision, recall, _ = precision_recall_curve(y_true, y_pred_proba)
-        pr_auc = auc(recall, precision)
-        # Placeholder for Precision@K, which should be in evaluation module
-        # p_at_5 = precision_at_k(y_true, y_pred_proba, k_percent=5.0)
+        pr_auc = pr_auc_score(y_true, y_pred_proba)
+        p_at_1 = precision_at_k(y_true, y_pred_proba, k=1.0)
+        p_at_3 = precision_at_k(y_true, y_pred_proba, k=3.0)
+        p_at_5 = precision_at_k(y_true, y_pred_proba, k=5.0)
 
         logger.info(f"Model: {model_name}")
         logger.info(f"  - PR AUC: {pr_auc:.4f}")
-        # logger.info(f"  - Precision@5%: {p_at_5:.4f}") ...
+        logger.info(f"  - Precision@1%: {p_at_1:.4f}")
+        logger.info(f"  - Precision@3%: {p_at_3:.4f}")
+        logger.info(f"  - Precision@5%: {p_at_5:.4f}")
 
     logger.info("--- Validation Phase Completed ---")
 
