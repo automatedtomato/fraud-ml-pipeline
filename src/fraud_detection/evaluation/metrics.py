@@ -1,5 +1,7 @@
 import numpy as np
-from sklearn.metrics import auc, precision_recall_curve
+from pytorch_tabnet.metrics import Metric
+from sklearn.metrics import average_precision_score
+
 
 
 def precision_at_k(y_true: np.ndarray, y_scores: np.ndarray, k: float) -> float:
@@ -44,5 +46,29 @@ def pr_auc_score(y_true: np.ndarray, y_scores: np.ndarray) -> float:
     Returns:
         float: PR AUC score
     """
-    precision, recall, _ = precision_recall_curve(y_true, y_scores)
-    return auc(recall, precision)
+
+    return average_precision_score(y_true, y_scores)
+
+
+class PR_AUC(Metric):
+    """
+    Custom metric for Precision-Recall Area Under Curve for pytorch-tabnet.
+    Inherits from pytorch_tabnet.metrics.Metric.
+    """
+
+    def __init__(self):
+        self._name = "pr_auc"  # This name will be used for logging during training.
+        self._maximize = True  # A higher PR AUC is better, so set to True.
+
+    def __call__(self, y_true, y_pred):
+        """
+        This method is called by TabNet to calculate the metric.
+        y_pred is the raw output from the network (a 2D array).
+        """
+        # Select the probability of the positive class (column 1)
+
+        return average_precision_score(y_true, y_pred[:, 1])
+
+
+if __name__ == "__main__":
+    print(issubclass(PR_AUC, Metric))

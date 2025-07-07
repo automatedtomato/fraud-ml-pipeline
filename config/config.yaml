@@ -27,22 +27,26 @@ data:
     - category_tx_count
     - tx_with_same_merch_in_last_1h
   target_column: &target_column "is_fraud"
+  split_ration: 0.8
+  val_sample: 10000
+  chunk_size: 5000
+  batch_train_sample_size: 500000
 
 models:
   # Model config
   xgboost_v1:
-    run: true # Run this model?
+    run: false # Run this model?
     class_path: "fraud_detection.models.xgboost_model.XGBoostModel"
     training_strategy: "incremental"
 
     model_params:
       objective: 'binary:logistic'
       eval_metric: 'aucpr' # AUC-PR for inbalance dataset
-      n_estimators: 1000
-      learning_rate: 0.05
+      n_estimators: 10000
+      learning_rate: 0.01
       max_depth: 7
-      subsample: 0.6
-      colsample_bytree: 0.6
+      subsample: 0.8
+      colsample_bytree: 0.8
       # use_label_encoder: false
       early_stopping_rounds: 50
       random_state: 87
@@ -55,7 +59,7 @@ models:
 
 
   isolation_forest_v1:
-    run: true
+    run: false
     class_path: "fraud_detection.models.isolation_forest_model.IsolationForestModel"
     training_strategy: "incremental"
 
@@ -72,7 +76,7 @@ models:
   pytorch_tabnet_v1:
     run: true
     class_path: "fraud_detection.models.pytorch_model.PyTorchModel"
-    training_strategy: "incremental"
+    training_strategy: "batch"
 
     model_params:
       n_d: 8 # Output dimension of feature transformer
@@ -92,6 +96,10 @@ models:
         min_lr: 1e-5
       
       mask_type: 'sparsemax'
-      verbose: 10
+      verbose: 1
+
+    fit_params:
+      patience: 50
+      max_epochs: 1000
 log:
   level: "DEBUG"
