@@ -67,11 +67,6 @@ class IsolationForestModel(BaseModel):
 
             all_scores += fraud_scores * weights[i]
 
-            self.counter += 1
-            if self.counter >= 10:
-                logger.info(f"Predicted with total of {len(self.models)} models...")
-                self.counter = 0
-
         weighted_avg_scores = all_scores / np.sum(weights)
 
         return pd.Series(weighted_avg_scores, index=X_test.index)
