@@ -148,15 +148,14 @@ def train(split_ratio: float = 0.8):
             ModelClass = _import_class(model_config["class_path"])
 
             params = model_config.get("model_params", {})
-            
-            if 'optimizer_fn' in params and isinstance(params['optimizer_fn'], str):
-                params['optimizer_fn'] = _import_class(params['optimizer_fn'])
-            
-            if 'scheduler_fn' in params and isinstance(params['scheduler_fn'], str):
-                params['scheduler_fn'] = _import_class(params['scheduler_fn'])
-                
-                
-            for param_dict_key in ['optimizer_params', 'scheduler_params']:
+
+            if "optimizer_fn" in params and isinstance(params["optimizer_fn"], str):
+                params["optimizer_fn"] = _import_class(params["optimizer_fn"])
+
+            if "scheduler_fn" in params and isinstance(params["scheduler_fn"], str):
+                params["scheduler_fn"] = _import_class(params["scheduler_fn"])
+
+            for param_dict_key in ["optimizer_params", "scheduler_params"]:
                 if param_dict_key in params:
                     for key, value in params[param_dict_key].items():
                         try:
@@ -164,7 +163,7 @@ def train(split_ratio: float = 0.8):
                         except (ValueError, TypeError):
                             # If conversion fails, it is genuinely string (like 'min'), so let's leave it as it is.
                             pass
-                
+
             if "xgboost" in model_name.lower():
                 params["scale_pos_weight"] = scale_pos_weight
 
