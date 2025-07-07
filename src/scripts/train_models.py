@@ -23,7 +23,7 @@ CHUNK_SIZE = 5000  # Chunk size for loading data.
 # ========== Functions ==========
 def _import_class(class_path: str):
     """
-    Dynamically import a class object from import path (string)
+    Dynamically import a class object from string object
 
     e.g.
         import_class("fraud_detection.models.xgboost_model.XGBoostModel")
@@ -147,7 +147,23 @@ def train(split_ratio: float = 0.8):
             logger.info(f"Preparing model: '{model_name}'...")
             ModelClass = _import_class(model_config["class_path"])
 
-            params = model_config["model_params"]
+            params = model_config.get("model_params", {})
+
+            if "optimizer_fn" in params and isinstance(params["optimizer_fn"], str):
+                params["optimizer_fn"] = _import_class(params["optimizer_fn"])
+
+            if "scheduler_fn" in params and isinstance(params["scheduler_fn"], str):
+                params["scheduler_fn"] = _import_class(params["scheduler_fn"])
+
+            for param_dict_key in ["optimizer_params", "scheduler_params"]:
+                if param_dict_key in params:
+                    for key, value in params[param_dict_key].items():
+                        try:
+                            params[param_dict_key][key] = float(value)
+                        except (ValueError, TypeError):
+                            # If conversion fails, it is genuinely string (like 'min'), so let's leave it as it is.
+                            pass
+
             if "xgboost" in model_name.lower():
                 params["scale_pos_weight"] = scale_pos_weight
 
@@ -181,6 +197,7 @@ def train(split_ratio: float = 0.8):
 
             logger.info(f"Starting incremental training for '{model_name}...")
             for i, chunk_df in enumerate(train_iterator):
+                chunk_df.fillna(0, inplace=True)
                 chunk_df = _optimize_dtype(chunk_df)
                 X_chunk = chunk_df[features].copy()
                 y_chunk = chunk_df[target].copy()
@@ -208,7 +225,7 @@ def train(split_ratio: float = 0.8):
     counter = 0
 
     for i, chunk_df in enumerate(val_iterator):
-
+        chunk_df.fillna(0, inplace=True)
         chunk_df = _optimize_dtype(chunk_df)
         y_val_chunk = chunk_df[target].copy()
         all_trues.extend(y_val_chunk)

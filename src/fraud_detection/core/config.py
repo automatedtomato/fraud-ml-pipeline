@@ -14,7 +14,7 @@ from pydantic_settings import BaseSettings
 load_dotenv()
 
 
-from src.common.log_setting import setup_logger
+from common.log_setting import setup_logger
 
 # ========== Setup logger ==========
 logger = getLogger(__name__)
