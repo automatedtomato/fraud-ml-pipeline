@@ -4,7 +4,9 @@ WITH base_with_age AS (
         *,
         (trans_date || ' ' || trans_time)::timestamp AS trans_ts,
         -- Age of customer as of transaction
-        EXTRACT(YEAR FROM AGE((trans_date || ' ' || trans_time)::timestamp, dob::date)) AS age_at_tx
+        EXTRACT(YEAR FROM AGE((trans_date || ' ' || trans_time)::timestamp, dob::date)) AS age_at_tx,
+        EXTRACT(HOUR FROM (trans_date || ' ' || trans_time)::timestamp) AS hour_of_day,
+        EXTRACT(DOW FROM (trans_date || ' ' || trans_time)::timestamp) AS day_of_week
     FROM
         transactions
 ),

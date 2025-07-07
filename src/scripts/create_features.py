@@ -13,7 +13,7 @@ logger = setup_logger(logger, level="DEBUG")
 # ========== Constants ==========
 SQL_FILE_PATH = (
     Path(__file__).parents[1]
-    / "fraud_detection/features/aql/create_feature_transactions.sql"
+    / "fraud_detection/features/sql/create_feature_transactions.sql"
 )
 
 

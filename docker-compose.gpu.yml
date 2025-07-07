@@ -1,18 +1,74 @@
-version: '3.8'
-
 services:
-  app:
-    # build:
-    #   context: .
-    #   dockerfile: deployment/Dockerfile.gpu
+  dev:
+    build:
+      context: .
+      dockerfile: deployment/Dockerfile
+    container_name: fraud-dev
+    ports:
+      - "18000:8000" # FastAPI
+    volumes:
+      - .:/workspace/fraud-ml-pipeline
+      - mlruns:/workspace/fraud-ml-pipeline/mlruns
+    command: tail -f /dev/null
+    env_file:
+      - .env
+    environment:
+      - TZ=Asia/Tokyo
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
     deploy:
       resources:
         reservations:
           devices:
             - driver: nvidia
-              count: 1
+              count: all
               capabilities: [gpu]
+    depends_on:
+      db:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+
+  db:
+    image: postgres:15-alpine
+    container_name: fraud-db
+    ports:
+      - "15432:5432"
+    volumes: 
+      - postgres_data:/var/lib/postgresql/data
+      - ./data/sql:/docker-entrypoint-initdb.d
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - TZ=Asia/Tokyo
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: fraud-mlflow
+    ports:
+      - "15000:5000"
     command: >
-      sh -c "poetry install --no-interaction --no-ansi &&
-             echo 'GPU is available for PyTorch/TensorFlow.' &&
-             jupyter lab --ip=0.0.0.0 --port=8888 --allow-root --no-browser --NotebookApp.token=''"
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      --default-artifact-root /mlruns
+    volumes:
+      - mlruns:/mlruns
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+
+volumes:
+  postgres_data:
+  mlruns:

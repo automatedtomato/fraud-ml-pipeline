@@ -1,0 +1,105 @@
+generator:
+  # Simulation Data Generator config
+  n_customers: 1000
+  start_date: "2022-01-01"
+  end_date: "2024-01-01"
+
+data:
+  # Features
+  common_features: &common_features
+    - amt
+    - lat
+    - long
+    - city_pop
+    - age_at_tx
+    - hour_of_day
+    - day_of_week
+    - distance_from_home_km
+    - time_since_last_tx_sec
+    - tx_in_last_24h
+    - tx_in_last_7d
+    - avg_amt_in_last_24h
+    - avg_amt_in_last_7d
+    - ratio_to_avg_amt_in_last_7d
+    - ratio_to_avg_amt_in_last_24h
+    - avg_amt_historical
+    - amt_ratio_to_avg
+    - category_tx_count
+    - tx_with_same_merch_in_last_1h
+  target_column: &target_column "is_fraud"
+  split_ration: 0.8
+  val_sample: 10000
+  chunk_size: 5000
+  batch_train_sample_size: 500000
+
+models:
+  # Model config
+  xgboost_v1:
+    run: false # Run this model?
+    class_path: "fraud_detection.models.xgboost_model.XGBoostModel"
+    training_strategy: "incremental"
+
+    model_params:
+      objective: 'binary:logistic'
+      eval_metric: 'aucpr' # AUC-PR for inbalance dataset
+      n_estimators: 10000
+      learning_rate: 0.01
+      max_depth: 7
+      subsample: 0.8
+      colsample_bytree: 0.8
+      # use_label_encoder: false
+      early_stopping_rounds: 50
+      random_state: 87
+
+    fit_params:
+      verbose: 0
+
+    features: *common_features
+    target: *target_column
+
+
+  isolation_forest_v1:
+    run: false
+    class_path: "fraud_detection.models.isolation_forest_model.IsolationForestModel"
+    training_strategy: "incremental"
+
+    model_params:
+      n_estimators: 50
+      max_samples: 'auto'
+      contamination: 0.01 # Assumed fraud rate: 1%
+      n_jobs: -1
+      random_state: 87
+
+    features: *common_features
+
+  
+  pytorch_tabnet_v1:
+    run: true
+    class_path: "fraud_detection.models.pytorch_model.PyTorchModel"
+    training_strategy: "batch"
+
+    model_params:
+      n_d: 8 # Output dimension of feature transformer
+      n_a: 8 # Output dimension of attention transformer
+      n_steps: 3 # Num of dicision steps
+      gamma: 1.3 # Coef when reusing features
+
+      # Optimizer and scheduler
+      optimizer_fn: torch.optim.Adam
+      optimizer_params:
+        lr: 2e-2
+      scheduler_fn: torch.optim.lr_scheduler.ReduceLROnPlateau
+      scheduler_params:
+        mode: 'min'
+        patience: 10
+        factor: 0.1
+        min_lr: 1e-5
+      
+      mask_type: 'sparsemax'
+      verbose: 1
+
+    fit_params:
+      patience: 50
+      max_epochs: 1000
+log:
+  level: "DEBUG"
