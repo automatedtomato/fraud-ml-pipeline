@@ -31,7 +31,7 @@ data:
 models:
   # Model config
   xgboost_v1:
-    run: false # Run this model?
+    run: true # Run this model?
     class_path: "fraud_detection.models.xgboost_model.XGBoostModel"
     training_strategy: "incremental"
 
@@ -55,7 +55,7 @@ models:
 
 
   isolation_forest_v1:
-    run: false
+    run: true
     class_path: "fraud_detection.models.isolation_forest_model.IsolationForestModel"
     training_strategy: "incremental"
 
