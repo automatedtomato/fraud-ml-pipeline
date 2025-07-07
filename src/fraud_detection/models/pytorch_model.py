@@ -24,6 +24,8 @@ class PyTorchModel(BaseModel):
         super().__init__(model_params)
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         logger.info(f"TabNet run on device: {self.device}")
+        self.optimizer_fn = None
+        self.scheduler_fn = None
         
         # Instanciate TabNet
         # Pass optimizer and scheduler as parameters
@@ -56,8 +58,8 @@ class PyTorchModel(BaseModel):
             patience = 50,
             max_epochs = 1000,
             batch_size = 1024 * 8,
+            warm_start = True # Continue training from previous state
             )
-        logger.info("TabNet model fitted.")
         
     def predict_proba(self, X_test: pd.DataFrame, **kwargs) -> pd.Series:
         """
@@ -74,6 +76,9 @@ class PyTorchModel(BaseModel):
         pred_probas = pd.Series(prods, index=X_test.index)
         
         return pred_probas
+    
+    def predict(self, X_test, **kwargs):
+        raise NotImplementedError("TabNet model does not have a predict() method.")
     
     
     def save_model(self, path: str):
