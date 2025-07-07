@@ -4,9 +4,9 @@ from typing import Any, Dict
 import pandas as pd
 import torch
 from pytorch_tabnet.tab_model import TabNetClassifier
-from fraud_detection.evaluation.metrics import PR_AUC
 
 from common.log_setting import setup_logger
+from fraud_detection.evaluation.metrics import PR_AUC
 
 from .base import BaseModel
 
@@ -42,11 +42,13 @@ class PyTorchModel(BaseModel):
 
         eval_set = kwargs.get("eval_set")
         eval_set_np = []
-        
+
         if eval_set:
             X_val, y_val = eval_set[0]
             eval_set_np = [(X_val.values, y_val.values)]
-            logger.info(f"Using validation set of size: {len(X_val)} for early stopping.")
+            logger.info(
+                f"Using validation set of size: {len(X_val)} for early stopping."
+            )
 
         self.model.fit(
             X_train_np,

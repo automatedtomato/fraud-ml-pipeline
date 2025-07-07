@@ -1,12 +1,14 @@
-import pandas as pd
-import numpy as np
 import importlib
-
 from logging import getLogger
+
+import numpy as np
+import pandas as pd
+
 from common.log_setting import setup_logger
 
 logger = getLogger(__name__)
 logger = setup_logger(logger, level="DEBUG")
+
 
 def _optimize_dtype(df: pd.DataFrame) -> pd.DataFrame:
     """
