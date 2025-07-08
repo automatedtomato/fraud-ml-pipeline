@@ -21,7 +21,8 @@ class TransactionRequest(BaseModel):
     tx_in_last_7d: int = Field(..., example=5, description="Number of transactions in the last 7 days")
     avg_amt_in_last_24h: float = Field(..., example=100.0, description="Average amount of transactions in the last 24 hours")
     avg_amt_in_last_7d: float = Field(..., example=200.0, description="Average amount of transactions in the last 7 days")
-    ratio_to_avg_amt_in_last_7d: float = Field(..., example=0.5, description="Ratio of the transaction amount to the average amount in the last 7 days")
+    amt_ratio_to_avg: float = Field(..., example=1.1, description="Ratio of the transaction amount to the average amount in the last 7 days")
+    ratio_to_avg_amt_in_last_7d: float = Field(..., example=0.5, description="Ratio of the transaction amount to the average amount as of the transaction date")
     ratio_to_avg_amt_in_last_24h: float = Field(..., example=0.5, description="Ratio of the transaction amount to the average amount in the last 24 hours")
     avg_amt_historical: float = Field(..., example=200.0, description="Average amount of all transactions")
     category_tx_count: int = Field(..., example=3, description="Number of transactions in in the same category as the current transaction")
@@ -44,6 +45,7 @@ class TransactionRequest(BaseModel):
                 "tx_in_last_7d": 5,
                 "avg_amt_in_last_24h": 100.0,
                 "avg_amt_in_last_7d": 200.0,
+                "amt_ratio_to_avg": 1.1,
                 "ratio_to_avg_amt_in_last_7d": 0.5,
                 "ratio_to_avg_amt_in_last_24h": 0.5,
                 "avg_amt_historical": 200.0,

@@ -79,8 +79,8 @@ models:
     training_strategy: "batch"
 
     model_params:
-      n_d: 8 # Output dimension of feature transformer
-      n_a: 8 # Output dimension of attention transformer
+      n_d: 16 # Output dimension of feature transformer
+      n_a: 16 # Output dimension of attention transformer
       n_steps: 3 # Num of dicision steps
       gamma: 1.3 # Coef when reusing features
 
@@ -98,8 +98,5 @@ models:
       mask_type: 'sparsemax'
       verbose: 1
 
-    fit_params:
-      patience: 50
-      max_epochs: 1000
 log:
   level: "DEBUG"
