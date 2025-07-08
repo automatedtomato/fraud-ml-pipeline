@@ -51,7 +51,7 @@ services:
       retries: 5
 
   mlflow:
-    image: ghcr.io/mlflow/mlflow:latest
+    build: ./mlflow
     container_name: fraud-mlflow
     ports:
       - "15000:5000"
