@@ -1,8 +1,8 @@
+import json
+from datetime import datetime
 from logging import getLogger
 
 import pandas as pd
-import json
-from datetime import datetime
 
 from common.log_setting import setup_logger
 from fraud_detection.core.config import load_config
@@ -76,7 +76,7 @@ def run_pipeline():
         data_config=data_config,
         engine=engine,
     )
-    
+
     # Step 4: Save Models
     logger.info("--- Saving Trained Models ---")
     for model_name, model in trained_models.items():
@@ -90,19 +90,21 @@ def run_pipeline():
         data_config=data_config,
         engine=engine,
     )
-    
+
     # Step 6: Save Evaluation Results
     logger.info("--- Saving Evaluation Results ---")
     time_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     results_path = f"reports/evaluation_results_{time_stamp}.json"
     logger.info(f"Saving evaluation results to '{results_path}'")
-    
+
     for model_name, metrics in evaluation_results.items():
         for metric_name, value in metrics.items():
-            if hasattr(value, 'item'):
-                metrics[metric_name] = value.item() # Convert numpy/torch float/int to python float/int
-                
-    with open(results_path, 'w') as f:
+            if hasattr(value, "item"):
+                metrics[metric_name] = (
+                    value.item()
+                )  # Convert numpy/torch float/int to python float/int
+
+    with open(results_path, "w") as f:
         json.dump(evaluation_results, f, indent=4)
     logger.info(f"Saved evaluation results to '{results_path}'")
 
