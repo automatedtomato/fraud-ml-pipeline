@@ -1,3 +1,5 @@
+import json
+from datetime import datetime
 from logging import getLogger
 
 import pandas as pd
@@ -21,12 +23,12 @@ def run_pipeline():
 
     logger.info("==== Starting Fraud Detection Pipeline ====")
 
-    # Step1: Load Configurations
+    # Step 1: Load Configurations
     models_config = load_config(root="models")
     data_config = load_config(root="data")
     engine = get_db_engine()
 
-    # Step2: Prepare and Instantiate Models
+    # Step 2: Prepare and Instantiate Models
     table_name = "feature_transactions"
     total_rows = pd.read_sql(f"SELECT COUNT(*) FROM {table_name}", engine).iloc[0, 0]
     train_rows = int(total_rows * data_config.get("split_ratio", 0.8))
@@ -67,7 +69,7 @@ def run_pipeline():
         logger.warning("No models to train. Exiting...")
         return
 
-    # Step3: Train Models
+    # Step 3: Train Models
     trained_models = train_models(
         models_to_train=models_to_train,
         models_config=models_config,
@@ -75,12 +77,36 @@ def run_pipeline():
         engine=engine,
     )
 
-    # Step4: Evaluate Models
+    # Step 4: Save Models
+    logger.info("--- Saving Trained Models ---")
+    for model_name, model in trained_models.items():
+        save_path = f"models/{model_name}"
+        model.save_model(save_path)
+        logger.info(f"Model '{model_name}' saved to '{save_path}'")
+
+    # Step 5: Evaluate Models
     evaluation_results = evaluate_models(
         trained_models=trained_models,
         data_config=data_config,
         engine=engine,
     )
+
+    # Step 6: Save Evaluation Results
+    logger.info("--- Saving Evaluation Results ---")
+    time_stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    results_path = f"reports/evaluation_results_{time_stamp}.json"
+    logger.info(f"Saving evaluation results to '{results_path}'")
+
+    for model_name, metrics in evaluation_results.items():
+        for metric_name, value in metrics.items():
+            if hasattr(value, "item"):
+                metrics[metric_name] = (
+                    value.item()
+                )  # Convert numpy/torch float/int to python float/int
+
+    with open(results_path, "w") as f:
+        json.dump(evaluation_results, f, indent=4)
+    logger.info(f"Saved evaluation results to '{results_path}'")
 
     logger.info("==== Fraud Detection Pipeline Completed ====")
     print(f"Final Results: {evaluation_results}")

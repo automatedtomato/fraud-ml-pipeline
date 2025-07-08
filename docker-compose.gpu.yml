@@ -9,7 +9,7 @@ services:
     volumes:
       - .:/workspace/fraud-ml-pipeline
       - mlruns:/workspace/fraud-ml-pipeline/mlruns
-    command: tail -f /dev/null
+    command: poetry run uvicorn fraud_detection.api.main:app --host 0.0.0.0 --port 8000 --reload
     env_file:
       - .env
     environment:

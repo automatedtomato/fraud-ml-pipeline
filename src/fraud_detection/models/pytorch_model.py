@@ -55,6 +55,7 @@ class PyTorchModel(BaseModel):
             y_train_np,
             eval_set=eval_set_np,
             patience=50,
+            max_epochs=1000,
             eval_metric=[PR_AUC],
             batch_size=1024 * 8,
             warm_start=True,  # Continue training from previous state
