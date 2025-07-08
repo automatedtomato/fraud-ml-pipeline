@@ -1,10 +1,10 @@
 import json
 from datetime import datetime
 from logging import getLogger
-import mlflow
 
 import pandas as pd
 
+import mlflow
 from common.log_setting import setup_logger
 from fraud_detection.core.config import load_config
 from fraud_detection.data.database import get_db_engine
@@ -24,11 +24,13 @@ def run_pipeline():
     # Set up MLflow tracking
     mlflow.set_tracking_uri("http://mlflow:5000")
     mlflow.set_experiment("Fraud Detection Pipeline")
-    
+
     # Start MLflow run
     with mlflow.start_run() as run:
         run_id = run.info.run_id
-        logger.info(f"==== Starting Fraud Detection Pipeline (MLflow Run ID: {run_id}) ====")
+        logger.info(
+            f"==== Starting Fraud Detection Pipeline (MLflow Run ID: {run_id}) ===="
+        )
         mlflow.log_param("run_timestamp", datetime.now().isoformat())
 
         # Step 1: Load Configurations
@@ -38,7 +40,9 @@ def run_pipeline():
 
         # Step 2: Prepare and Instantiate Models
         table_name = "feature_transactions"
-        total_rows = pd.read_sql(f"SELECT COUNT(*) FROM {table_name}", engine).iloc[0, 0]
+        total_rows = pd.read_sql(f"SELECT COUNT(*) FROM {table_name}", engine).iloc[
+            0, 0
+        ]
         train_rows = int(total_rows * data_config.get("split_ratio", 0.8))
         scale_pos_weight = _calc_scale_pos_weight(
             table_name, train_rows, data_config["target_column"], engine
@@ -71,9 +75,13 @@ def run_pipeline():
                 if "xgboost" in model_name.lower():
                     params["scale_pos_weight"] = scale_pos_weight
                 models_to_train[model_name] = ModelClass(model_params=params)
-                
-                flat_params = pd.json_normalize(params, sep='_').to_dict(orient='records')[0]
-                mlflow.log_params({f"{model_name}_{k}": v for k, v in flat_params.items()})
+
+                flat_params = pd.json_normalize(params, sep="_").to_dict(
+                    orient="records"
+                )[0]
+                mlflow.log_params(
+                    {f"{model_name}_{k}": v for k, v in flat_params.items()}
+                )
             else:
                 logger.info(f"Skipping model: '{model_name}'...")
                 continue
@@ -97,7 +105,7 @@ def run_pipeline():
             save_path = f"models/{model_name}"
             model.save_model(save_path)
             logger.info(f"Model '{model_name}' saved to '{save_path}'")
-        
+
         mlflow.log_artifacts("models", artifact_path="trained_models")
         logger.info("Logged trained models as artifacts to MLflow.")
 
@@ -125,11 +133,11 @@ def run_pipeline():
                     metrics[metric_name] = (
                         value.item()
                     )  # Convert numpy/torch float/int to python float/int
-                    
+
         with open(results_path, "w") as f:
             json.dump(evaluation_results, f, indent=4)
         logger.info(f"Saved evaluation results to '{results_path}'")
-        
+
         mlflow.log_artifact(results_path, artifact_path="evaluation_results")
         logger.info("Logged evaluation results as artifacts to MLflow.")
 
